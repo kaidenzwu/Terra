@@ -24,12 +24,13 @@ def fast_fibonacci(n: str):
             exp //= 2
         return result
 
-
-
     result_matrix = matrix_power(F, n-1)
     return result_matrix[0][0]  # Fibonacci number at position n
 
-def get_cnn_headlines():
+def get_cnn_headlines(n: str):
+    n = int(n)
+    if n>10:
+        n = 10
     url = "http://cnn.com"
     page = urlopen(url)
     html_bytes = page.read()
@@ -40,9 +41,17 @@ def get_cnn_headlines():
     match_results = re.findall(pattern, html, re.IGNORECASE)
     match_results = [re.sub("<.*?>", "", element) for element in match_results]
 
-    my_string = ','.join(match_results)
+    headlines_string = ','.join(match_results)    
+    headlines_list = headlines_string.split(",")
 
-    return my_string
+    selected_string = ''
+    for i in range(n):
+      if i == n-1:
+        selected_string = selected_string + random.choice(headlines_list)
+      else :
+        selected_string = selected_string + random.choice(headlines_list) + "|| "
+
+    return selected_string
 
 AGENTS = {}
 
@@ -53,7 +62,7 @@ def start_agent(name):
     if name in AGENTS:
         return f"Agent '{name}' already exists."
     else:
-        AGENTS[name] = Agent('phi4-mini')
+        AGENTS[name] = Agent('llama2-uncensored')
         return f"Agent '{name}' created successfully."
 
 def sys_prompt_agent(name, prompt):
@@ -77,12 +86,12 @@ def chat_agent(name, prompt):
         return f"Agent '{name}' does not exist."
 
 
-help = Agent('phi4-mini')
+help = Agent('llama2-uncensored')
 help.sys_prompt('''
 You can call tools. Specifically, when you want to call a tool, please output it in this format
 <call tool>get_time()</call tool> or <call tool>fibonacci(n)</call tool>
                 
-Then, I will put the tool The returned results are given to you in this format
+The returned results are given to you in this format
 <tool return result>2025-03-23T19:28:50.5551361Z</tool ​​return result>
 or <tool return result>8<tool return result>
 ''')
@@ -91,7 +100,7 @@ help.add_tool('sys_prompt_agent', sys_prompt_agent, 'This function system prompt
 help.add_tool('chat_agent', chat_agent, 'This function generates a text response from an AI agent.')
 #help.sys_prompt("You are a friendly AI agent with the capability of making new AI agents. Chat with the user in a friendly way and help them as necessary.")
 help.add_tool('fast_fibbonacci', fast_fibonacci, 'This function quickly returns the value of a specific element in the fibbonacci sequence')
-help.add_tool('get_cnn_headlines', get_cnn_headlines, 'this function gives you of Chicago Maroon newspaper headlines from 1892')
+help.add_tool('get_cnn_headlines', get_cnn_headlines, 'this function gives you access to some samples of thereotical CNN headlines. The argument n is the number of headlines it will return, with a maximum of 10')
 # print(help.chat('Create an AI agent that has the personality of Lord Voldemort.'))
 
 while True:
@@ -103,3 +112,5 @@ while True:
 
 for item in help.get_log():
     print(item)
+
+#Doesn't work when calling a function with no arguments
